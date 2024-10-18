@@ -11,6 +11,8 @@ import {WebGLStyle} from 'ol/style/webgl';
 import {StyleFunction} from 'ol/style/Style';
 import {Circle, Fill, Stroke, Style} from 'ol/style';
 import {Pixel} from 'ol/pixel';
+import {FeatureLike} from 'ol/Feature';
+import {Source} from 'ol/source';
 
 export const ISOLINE_LAYER_ID = 'isolineLayer';
 export const ISOLINE_LABELS_LAYER_ID = 'isolineLabelsLayer';
@@ -22,6 +24,14 @@ export const LABELS_Z_INDEX = Z_INDEX_MAX - 1;
 export const getMapLayers = (map: OlMap): BaseLayer[] => {
   return map.getLayers().getArray();
 };
+
+class WebGLIsolineLayer extends Layer {
+  createRenderer(): WebGLVectorLayerRenderer {
+    return new WebGLVectorLayerRenderer(this, {
+      style: getWebGlIsolineLayerStyle(),
+    });
+  }
+}
 
 export const getWebGlIsolineLayerStyle = (): WebGLStyle => {
   return {
@@ -46,9 +56,9 @@ export const getWebGlIsolineLayerStyle = (): WebGLStyle => {
 };
 
 export const getDefaultIsolineLayerStyle = (): StyleFunction => {
-  return (feature: Feature<Geometry>) => {
+  return (feature: FeatureLike) => {
     const color = feature.get('color');
-    if (!color) return new Style();
+    if (!color || !isFeatureGeom(feature)) return new Style();
     if (feature.getGeometry()?.getType() === 'Point') {
       return new Style({
         image: new Circle({
@@ -67,10 +77,14 @@ export const getDefaultIsolineLayerStyle = (): StyleFunction => {
 
 export const getMapFeaturesLayerAndSource = (
   map: OlMap
-): {layer: VectorLayer; source: VectorSource} | null => {
+): {layer: BaseLayer; source: Source} | null => {
   const layer =
     getMapLayers(map).find(l => l.get('id') === ISOLINE_LAYER_ID) || null;
-  if (!layer || !('getSource' in layer)) return null;
+  if (
+    !layer ||
+    !(layer instanceof VectorLayer || layer instanceof WebGLIsolineLayer)
+  )
+    return null;
   const source = layer?.getSource() || null;
   if (!source) {
     return null;
@@ -84,7 +98,7 @@ export const getIsolineLabelsLayerAndSource = (
   const layer =
     getMapLayers(map).find(l => l.get('id') === ISOLINE_LABELS_LAYER_ID) ||
     null;
-  if (!layer || !('getSource' in layer)) return null;
+  if (!layer || !(layer instanceof VectorLayer)) return null;
   const source = layer?.getSource() || null;
   if (!source) {
     return null;
@@ -97,15 +111,7 @@ export const addIsolineOlLayer = (
   features: Feature<Geometry>[],
   wantWebGlLayer?: boolean
 ) => {
-  class WebGLLayer extends Layer {
-    createRenderer() {
-      return new WebGLVectorLayerRenderer(this, {
-        style: getWebGlIsolineLayerStyle(),
-      });
-    }
-  }
-
-  const webglLayer = new WebGLLayer({
+  const webglLayer = new WebGLIsolineLayer({
     zIndex: OBJECTS_Z_INDEX,
     source: new VectorSource({
       features,
@@ -181,7 +187,7 @@ export const addHighlightLayer = (map: Map) => {
   const highlightLayer = new VectorLayer({
     source: new VectorSource(),
     zIndex: Z_INDEX_MAX,
-    style: (feature: Feature<Geometry>) => {
+    style: (feature: FeatureLike) => {
       const highlightFillColor = 'rgba(95,15,150,0.8)';
       if (!feature.get('color')) return new Style();
       const geomType = feature.getGeometry()?.getType();
@@ -209,7 +215,7 @@ export const getHighlightLayerAndSource = (
 ): {layer: VectorLayer; source: VectorSource} | null => {
   const layer =
     getMapLayers(map).find(l => l.get('id') === HIGHLIGHT_ID) || null;
-  if (!layer || !('getSource' in layer)) return null;
+  if (!layer || !(layer instanceof VectorLayer)) return null;
   const source = layer?.getSource();
   return {layer, source};
 };
@@ -221,8 +227,8 @@ export const addHighlight = (map: Map) => {
     highlightSource.clear();
     const feature = map.forEachFeatureAtPixel(
       pixel,
-      function (feature: Feature<Geometry>, layer: Layer) {
-        if (layer.get('id') === HIGHLIGHT_ID) return;
+      function (feature: FeatureLike, layer: Layer) {
+        if (layer.get('id') === HIGHLIGHT_ID || !isFeatureGeom(feature)) return;
         highlightSource.addFeature(feature);
         return feature;
       }
@@ -238,3 +244,8 @@ export const addHighlight = (map: Map) => {
     displayFeatureInfo(pixel);
   });
 };
+
+export const isFeatureGeom = (feature: unknown): feature is Feature<Geometry> =>
+  typeof feature === 'object' &&
+  feature instanceof Feature &&
+  feature.getGeometry();

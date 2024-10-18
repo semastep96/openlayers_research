@@ -8,9 +8,9 @@ import {GeoJSON} from 'ol/format';
 import {
   addIsolineOlLayer,
   addIsolineTitlesLayer,
+  isFeatureGeom,
   setColorsAndTitles,
 } from './utils.ts';
-import {FeatureLike} from 'ol/Feature';
 import {Geometry} from 'ol/geom';
 
 export const Map: React.FC = () => {
@@ -63,7 +63,9 @@ export const Map: React.FC = () => {
     fetch('/isolineData/isoline.json')
       .then(response => response.json())
       .then((data: FeaturesData) => {
-        const featuresGeom: FeatureLike = new GeoJSON({}).readFeatures(data);
+        const featuresGeom = new GeoJSON({})
+          .readFeatures(data)
+          .filter(isFeatureGeom);
         setFeatures(featuresGeom);
       })
       .finally(() => console.log('featuresSet'))
@@ -101,7 +103,7 @@ export const Map: React.FC = () => {
         <div className={'menu_info'}>value: "{currentInfo?.value || '-'}"</div>
         <div className={'menu_info'}>name: "{currentInfo?.name || '-'}"</div>
         <div className={'menu_info'}>
-          color: "{currentInfo?.color.toString() || '-'}"
+          color: "{currentInfo?.color?.toString() || '-'}"
         </div>
         <div className={'menu_info'}>
           geometry: "{currentInfo?.geometry || '-'}"

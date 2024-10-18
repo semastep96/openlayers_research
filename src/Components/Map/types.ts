@@ -11,10 +11,10 @@ export type FeaturesData = {
 };
 
 export type FeatureInfo = {
-  value: number;
-  color: [];
-  name: string;
-  geometry: string;
+  value?: number;
+  color?: [];
+  name?: string;
+  geometry?: string;
 };
 
 export type SetInfo = (info: FeatureInfo | null) => void;

@@ -4,7 +4,7 @@ import OSM from 'ol/source/OSM';
 import View from 'ol/View';
 import {ScaleLine, Zoom} from 'ol/control';
 import {addHighlight, addHighlightLayer, HIGHLIGHT_ID} from './utils.ts';
-import {SetInfo} from './types.ts';
+import {FeatureInfo, SetInfo} from './types.ts';
 
 export const initMap = (setInfo: SetInfo) => {
   const map = new Map({
@@ -46,8 +46,9 @@ export const setInfoOnPointerMove = (map: Map, setInfo: SetInfo) => {
       (feature, layer) => {
         if (layer.get('id') === HIGHLIGHT_ID) return;
         const featureGeom = feature?.getGeometry();
-        const featureInfo = feature.getProperties();
-        setInfo({...featureInfo, geometry: featureGeom.getType()});
+        const featureInfo: Omit<FeatureInfo, 'geometry'> =
+          feature.getProperties();
+        setInfo({...featureInfo, geometry: featureGeom?.getType()});
         return feature;
       },
       {
