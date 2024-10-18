@@ -10,9 +10,14 @@ import {isNil} from 'lodash';
 import {WebGLStyle} from 'ol/style/webgl';
 import {StyleFunction} from 'ol/style/Style';
 import {Circle, Fill, Stroke, Style} from 'ol/style';
+import {Pixel} from 'ol/pixel';
 
 export const ISOLINE_LAYER_ID = 'isolineLayer';
 export const ISOLINE_LABELS_LAYER_ID = 'isolineLabelsLayer';
+export const HIGHLIGHT_ID = 'highlight';
+export const Z_INDEX_MAX = 100;
+export const OBJECTS_Z_INDEX = Z_INDEX_MAX - 2;
+export const LABELS_Z_INDEX = Z_INDEX_MAX - 1;
 
 export const getMapLayers = (map: OlMap): BaseLayer[] => {
   return map.getLayers().getArray();
@@ -101,11 +106,13 @@ export const addIsolineOlLayer = (
   }
 
   const webglLayer = new WebGLLayer({
+    zIndex: OBJECTS_Z_INDEX,
     source: new VectorSource({
       features,
     }),
   });
   const defaultLayer = new VectorLayer({
+    zIndex: OBJECTS_Z_INDEX,
     style: getDefaultIsolineLayerStyle(),
     source: new VectorSource({
       features,
@@ -131,6 +138,7 @@ export function addIsolineTitlesLayer(
 
   if (!isLabelsVisible) return;
   const labelLayer = new VectorLayer({
+    zIndex: LABELS_Z_INDEX,
     source: new VectorSource({
       features,
     }),
@@ -166,3 +174,67 @@ export function setColorsAndTitles(features: Feature<Geometry>[]) {
     ft.set('name', 'test obj name ' + colorScale(isNil(val) ? 0 : val).hex());
   });
 }
+
+export const addHighlightLayer = (map: Map) => {
+  const prevLayer = getHighlightLayerAndSource(map)?.layer;
+  if (prevLayer) map.removeLayer(prevLayer);
+  const highlightLayer = new VectorLayer({
+    source: new VectorSource(),
+    zIndex: Z_INDEX_MAX,
+    style: (feature: Feature<Geometry>) => {
+      const highlightFillColor = 'rgba(95,15,150,0.8)';
+      if (!feature.get('color')) return new Style();
+      const geomType = feature.getGeometry()?.getType();
+      if (geomType === 'Point') {
+        return new Style({
+          image: new Circle({
+            radius: 5,
+            fill: new Fill({color: highlightFillColor}),
+            stroke: new Stroke({color: highlightFillColor, width: 1}),
+          }),
+        });
+      }
+      return new Style({
+        stroke: new Stroke({color: highlightFillColor, width: 0.1}),
+        fill: new Fill({color: highlightFillColor}),
+      });
+    },
+  });
+  highlightLayer.set('id', HIGHLIGHT_ID);
+  map.addLayer(highlightLayer);
+};
+
+export const getHighlightLayerAndSource = (
+  map: Map
+): {layer: VectorLayer; source: VectorSource} | null => {
+  const layer =
+    getMapLayers(map).find(l => l.get('id') === HIGHLIGHT_ID) || null;
+  if (!layer || !('getSource' in layer)) return null;
+  const source = layer?.getSource();
+  return {layer, source};
+};
+
+export const addHighlight = (map: Map) => {
+  const displayFeatureInfo = function (pixel: Pixel) {
+    const highlightSource = getHighlightLayerAndSource(map)?.source;
+    if (!highlightSource) return;
+    highlightSource.clear();
+    const feature = map.forEachFeatureAtPixel(
+      pixel,
+      function (feature: Feature<Geometry>, layer: Layer) {
+        if (layer.get('id') === HIGHLIGHT_ID) return;
+        highlightSource.addFeature(feature);
+        return feature;
+      }
+    );
+    map.getViewport().style.cursor = feature ? 'pointer' : '';
+  };
+
+  map.on('pointermove', function (evt) {
+    if (evt.dragging) {
+      return;
+    }
+    const pixel = map.getEventPixel(evt.originalEvent);
+    displayFeatureInfo(pixel);
+  });
+};

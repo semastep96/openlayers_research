@@ -3,7 +3,7 @@ import 'ol/ol.css';
 import {Feature, Map as olMap} from 'ol';
 import {initMap} from './initMapUtils.ts';
 import './style.css';
-import {FeaturesData} from './types.ts';
+import {FeatureInfo, FeaturesData} from './types.ts';
 import {GeoJSON} from 'ol/format';
 import {
   addIsolineOlLayer,
@@ -21,6 +21,7 @@ export const Map: React.FC = () => {
   const [isWebgl, setIsWebgl] = useState(true);
   const [isLabelsVisible, setIsLabelsVisible] = useState(false);
   const [isLabelsDeclutter, setIsLabelsDeclutter] = useState(false);
+  const [currentInfo, setCurrentInfo] = useState<FeatureInfo | null>(null);
 
   const handleWebglChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setIsWebgl(e.target.checked);
@@ -36,7 +37,7 @@ export const Map: React.FC = () => {
 
   useEffect(() => {
     if (isMapInitialized) return;
-    mapRef.current = initMap();
+    mapRef.current = initMap(setCurrentInfo);
     setIsMapInitialized(true);
   }, [isMapInitialized]);
 
@@ -96,6 +97,15 @@ export const Map: React.FC = () => {
             onChange={handleLabelsDeclutterChange}
           />
         </label>
+        <h3 className={'menu_title'}>Feature info</h3>
+        <div className={'menu_info'}>value: "{currentInfo?.value || '-'}"</div>
+        <div className={'menu_info'}>name: "{currentInfo?.name || '-'}"</div>
+        <div className={'menu_info'}>
+          color: "{currentInfo?.color.toString() || '-'}"
+        </div>
+        <div className={'menu_info'}>
+          geometry: "{currentInfo?.geometry || '-'}"
+        </div>
       </div>
       <div ref={mapElement} className={'map-container'}></div>
     </>

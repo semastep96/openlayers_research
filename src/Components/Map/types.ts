@@ -9,3 +9,12 @@ export type FeaturesData = {
   properties: {description: string};
   features: FeatureData[];
 };
+
+export type FeatureInfo = {
+  value: number;
+  color: [];
+  name: string;
+  geometry: string;
+};
+
+export type SetInfo = (info: FeatureInfo | null) => void;
