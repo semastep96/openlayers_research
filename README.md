@@ -1,8 +1,8 @@
 # Полезные ссылки на документацию Openlayers связанные с данной доработкой
 
-style expressions (во многом доступны в flat стилях, которые можно использовать с webGl слоями) https://openlayers.org/en/latest/apidoc/module-ol_style_expressions.html
-сами flat стили (текст нельзя применять к webgl слою) https://openlayers.org/en/latest/apidoc/module-ol_style_flat.html
-example с webgl слоем https://openlayers.org/en/latest/examples/webgl-vector-layer.html
+- style expressions (во многом доступны в flat стилях, которые можно использовать с webGl слоями) https://openlayers.org/en/latest/apidoc/module-ol_style_expressions.html
+- сами flat стили (текст нельзя применять к webgl слою) https://openlayers.org/en/latest/apidoc/module-ol_style_flat.html
+- example с webgl слоем https://openlayers.org/en/latest/examples/webgl-vector-layer.html
 
 # React + TypeScript + Vite
 
