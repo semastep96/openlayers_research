@@ -1,0 +1,25 @@
+{
+  "files": [],
+  "references": [
+    {
+      "path": "./tsconfig.app.json"
+    },
+    {
+      "path": "./tsconfig.node.json"
+    }
+  ],
+  "typeRoots": [
+    "./node_modules/@types"
+  ],
+  "baseUrl": ".",
+  "compilerOptions": {
+    "paths": {
+      "ol/*": [
+        "./node_modules/ol/*"
+      ]
+    }
+  },
+  "types": [
+    "ol"
+  ]
+}
