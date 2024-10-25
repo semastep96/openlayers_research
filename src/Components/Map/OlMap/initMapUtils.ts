@@ -4,7 +4,7 @@ import OSM from 'ol/source/OSM';
 import View from 'ol/View';
 import {ScaleLine, Zoom} from 'ol/control';
 import {addHighlight, addHighlightLayer, HIGHLIGHT_ID} from './utils.ts';
-import {FeatureInfo, SetInfo} from './types.ts';
+import {FeatureInfo, SetInfo} from '../types.ts';
 
 export const initMap = (setInfo: SetInfo) => {
   const map = new Map({
