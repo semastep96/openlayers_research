@@ -13,6 +13,7 @@ import {
 } from './utils.ts';
 import {Geometry} from 'ol/geom';
 import {FeatureInfo} from '../types.ts';
+import {getOlProjections} from './projections.ts';
 
 export const MapOpenLayers: React.FC = () => {
   const mapElement = useRef<HTMLDivElement | null>(null);
@@ -64,7 +65,11 @@ export const MapOpenLayers: React.FC = () => {
     fetch('/isolineData/isoline.json')
       .then(response => response.json())
       .then((data: FeaturesData) => {
-        const featuresGeom = new GeoJSON({})
+        const {dataProjection, mapProj} = getOlProjections();
+        const featuresGeom = new GeoJSON({
+          dataProjection,
+          featureProjection: mapProj,
+        })
           .readFeatures(data)
           .filter(isFeatureGeom);
         setFeatures(featuresGeom);

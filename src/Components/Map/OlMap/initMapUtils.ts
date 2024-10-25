@@ -14,8 +14,8 @@ export const initMap = (setInfo: SetInfo) => {
       }),
     ],
     view: new View({
-      center: [0, 0],
-      zoom: 2,
+      center: [15980052.349912023, 6932179.595998206],
+      zoom: 10,
     }),
   });
   addHighlightLayer(map);
